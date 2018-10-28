@@ -9,18 +9,12 @@
    #:enable))
 (in-package #:slynk-package-inferred)
 
-;; (defslyfun quickload (system-name)
-;;   "Basically the same as QL:QUICKLOAD"
-;;   (ql:quickload system-name)
-;;   (mapcar #'ql-dist:version (ql-dist:enabled-dists)))
-
-;; (defslyfun available-system-names ()
-;;   (cl:mapcar 'ql-dist:name (ql:system-list)))
-
 
 (defparameter *package-systems-cache* (make-hash-table :test 'eq))
 
+
 (defvar *original-get-completions* nil)
+
 
 (defun find-primary-system (package)
   "Searches a primary asdf system for the package.
