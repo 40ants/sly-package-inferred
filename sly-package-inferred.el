@@ -22,17 +22,15 @@ in `sly-editing-mode-hook', i.e. lisp files."
 
 
 (defun sly-package-inferred-enable ()
-  (sly-message "Enabling package-inferred SLY contrib")
   (sly-eval-async `(slynk-package-inferred:enable)
                   (lambda (retval)
-                    (sly-message "Package inferred systems support is enabled!"))))
+                    nil)))
 
 
 (defun sly-package-inferred-disable ()
-  (sly-message "Disabling package-inferred SLY contrib")
   (sly-eval-async `(slynk-package-inferred:disable)
                   (lambda (retval)
-                    (sly-message "Package inferred systems support is disabled!"))))
+                    nil)))
 
 
 ;;; Automatically add ourselves to `sly-contribs' when this file is loaded
