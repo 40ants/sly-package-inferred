@@ -3,7 +3,8 @@
 ;;;;;;  (21964 37122 0 0))
 ;;; Generated autoloads from sly-package-inferred.el
 
-(add-to-list 'sly-contribs 'sly-package-inferred 'append)
+(with-eval-after-load 'sly
+  (add-to-list 'sly-contribs 'sly-package-inferred 'append))
 
 ;;;***
 
