@@ -1,7 +1,7 @@
 # Better support for package inferred systems for SLY
 
-`sly-package-inferred` is an external contrib for [SLY][sly] that replaces it's
-completion with a function which is better suite for work on system using
+`sly-package-inferred` is an external contrib for [SLY][sly] that replaces its
+completion with a function which is better suited for systems using the
 package inferred style.
 
 ## Install from MELPA
