@@ -1,79 +1,57 @@
 (defpackage #:slynk-package-inferred
-  (:use :cl #:slynk-api)
-  (:import-from #:slynk-completion
-                #:sort-by-score
-                #:keywords-matching
-                #:accessible-matching)
-  (:export
-   #:disable
-   #:enable))
+  (:use :cl)
+  (:import-from #:slynk)
+  (:export #:disable
+           #:enable))
 (in-package #:slynk-package-inferred)
 
 
-(defparameter *package-systems-cache* (make-hash-table :test 'eq))
+(defvar *original-hook-value*)
 
 
-(defvar *original-get-completions* nil)
+(defun is-from-same-system (left-package right-package)
+  (let* ((left-package-name (package-name left-package))
+         (right-package-name (package-name right-package))
+         (slash-in-left (position #\/ left-package-name))
+         (slash-in-right (position #\/ right-package-name)))
+    (string= (subseq left-package-name
+                     0 slash-in-left)
+             (subseq right-package-name
+                     0 slash-in-right))))
 
 
-(defun find-primary-system (package)
-  "Searches a primary asdf system for the package.
-   For example, for package ultralisp/models/user it will return \"ultralisp\" system.
-   Used to give higher score to symbols from the same system dyring autocompletion."
-  
-  (check-type package package)
-  (let ((cached-value (gethash package *package-systems-cache* :absent)))
-    (if (eql cached-value :absent)
-        (setf (gethash package *package-systems-cache*)
-              (handler-case (asdf:primary-system-name
-                             (asdf:find-system
-                              (make-symbol (package-name package))))
-                (asdf/find-component:missing-component ()
-                  nil)))
-        (values cached-value))))
-
-
-(defun get-completions (pattern package &key (limit 300))
-  "This variant of get-completions searches for symbols
-   which are from the same primary system as current package
-   and moves them to the from of the list."
-  
-  (let ((results (slynk-completion:get-completions pattern package :limit limit))
-        (current-primary-system (find-primary-system package)))
-    (loop for item in results
-          for symbol = (second item)
-          for symbol-package = (when current-primary-system
-                                 (symbol-package symbol))
-          for symbol-primary-system = (when symbol-package
-                                        (find-primary-system symbol-package))
-          for from-the-same-system = (when symbol-primary-system
-                                       (string-equal current-primary-system
-                                                     symbol-primary-system))
-          when from-the-same-system
-            collect item into same-system-items
-          unless from-the-same-system
-            collect item into other-items
-          finally
-             (return (append same-system-items
-                             other-items)))))
+(defun sort-autocompletion-results (left right)
+  (cond
+    ;; We need this branch to keep ordering by
+    ;; score between symbols from the same package
+    ((is-from-same-system (symbol-package left)
+                          (symbol-package right))
+     nil)
+    ;; This will move results from the current-buffer's
+    ;; package to the front.
+    ((is-from-same-system (symbol-package left)
+                          slynk-completion:*current-package*)
+     t)))
 
 
 (defun enable ()
-  (unless (eql slynk-completion:*get-completions*
-               'get-completions)
-    (setf *original-get-completions*
-          slynk-completion:*get-completions*))
-  
-  (setf slynk-completion:*get-completions*
-        'get-completions))
+  (let ((var (find-symbol "*COMPLETION-SORT-PREDICATE*" :slynk-completion)))
+    (cond
+      (var
+       (setf *original-hook-value*
+             (symbol-value var))
+       (setf (symbol-value var)
+             'sort-autocompletion-results))
+      (t
+       (warn "This contrib can work only with SLY from https://github.com/svetlyak40wt/sly/tree/patches"))))
+  (values))
 
 
 (defun disable ()
-  (when *original-get-completions*
-    (setf slynk-completion:*get-completions*
-          *original-get-completions*)
-    (setf *original-get-completions*
-          nil)))
+  (let ((var (find-symbol "*COMPLETION-SORT-PREDICATE*" :slynk-completion)))
+    (when var
+      (setf (symbol-value var)
+            *original-hook-value*))))
 
 
 (provide 'slynk-package-inferred)

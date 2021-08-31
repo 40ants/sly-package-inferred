@@ -4,6 +4,9 @@
 completion with a function which is better suited for systems using the
 package inferred style.
 
+**Warning!** This system works with SLY version installed [from here](https://github.com/svetlyak40wt/sly/tree/patches).
+Because it contains patch https://github.com/joaotavora/sly/pull/417 which is not merged yet to upstream.
+
 ## Install from MELPA
 
 This package is not available on MELPA yet.
